@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Flask API for OTRS tutorial- Client example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="http://localhost:5000/static/css/flask_api_client.css">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Logo</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="disabled"><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid text-center">
+      <div class="row content">
+        <div class="col-sm-2 sidenav">
+          <p></p>
+        </div>
+        <div class="col-sm-8 text-left">
+          <h1>Search OTRS</h1>
+          <p>
+            <div id="the-basics">
+                <form id="customer_form" action="http://localhost:5000/customers/info" title="" method="get">
+                    <input id="cust-search-field" type="text" placeholder="Type a customer company name..." pattern="[a-zA-Z0-9-_ ]{3,50}" autofocus required>
+                    <input type="submit" id="submitButton"  name="submitButton" value="Submit">
+                </form>
+            </div>
+            <div>
+                <div>
+                    <h3>Instructions</h3>
+                    <p>Enter part of the name of a company, for instance "A Comp" and select the company.
+                    After submitting the company, the company info will be displayed.
+                    This example uses a local sqlite database with the same table info as OTRS for customers.
+                    Change the code to use your OTRS database to search your OTRS database.
+                    </p>
+                </div>
+                <h3>Company data</h3>
+                <div id="customer_info">
+                </div>
+            </div>
+          </p>
+        </div>
+        <div class="col-sm-2 sidenav">
+        </div>
+      </div>
+    </div>
+
+    <footer class="container-fluid text-center">
+        <p>&copy; <a href="https://www.ictforce.be" target="_blank">ICT Force</a></p>
+    </footer>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
+            integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script>
+    /* Autocomplete for search field */
+    jQuery(function() {
+        $("#cust-search-field").on('keyup', function(){
+            var value = $(this).val();
+            $.ajax({
+                url: "http://localhost:5000/customers/",
+                data: {
+                  'search': value
+                },
+                dataType: 'json',
+                success: function (data) {
+                    searchResult(data)
+                },
+                error: function () {
+                    console.log('error');
+                }
+            });
+        });
+      });
+    function searchResult(data) {
+        var $searchBox = $("#cust-search-field");
+        console.log(data);
+        /*list = data.list;*/
+        $searchBox.autocomplete({
+            source: data,
+            minLength: 3
+        });
+    }
+    /* Helper function */
+    function hasValue(data) {
+        return (data !== undefined) && (data !== null) && (data !== "");
+    }
+    /* Submit customer search */
+    /* Attach a submit handler to the form */
+    $("#customer_form").submit(function(event) {
+
+      /* stop form from submitting normally */
+      event.preventDefault();
+
+      /* get the action attribute from the <form action=""> element */
+      var $form = $( this ),
+          url = $form.attr( 'action' );
+
+      /* Send the data using post with element id name and name2*/
+      var posting = $.get( url, { search: $('#cust-search-field').val() });
+
+      /* Alerts the results */
+      posting.done(function( data ) {
+            console.log('Receiving customer info');
+
+            /* Pretty print some of the fields */
+            if (hasValue(data) ) {
+                var out = "";
+
+                out = out.concat("<ul class='results'>");
+                out = out.concat("<li><span>Customer ID: </span>", data["customer_id"], "<li/>");
+                out = out.concat("<li><span>Street: </span>", data["street"], "<li/>");
+                out = out.concat("<li><span>City: </span>", data["zip"], ", ", data["city"], "<li/>");
+                out = out.concat("<li><span>Country: </span>", data["country"], "<li/>");
+                out = out.concat("</ul>");
+
+                document.getElementById("customer_info").innerHTML = out;
+            }
+            else {
+                document.getElementById("customer_info").innerHTML = "<span style='font-weight: bold;'>No result found: no customer data found or more than one possible client found.</span>";
+            }
+      });
+    });
+    </script>
+</body>
+</html>
+
+

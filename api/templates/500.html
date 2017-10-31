@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block append_title %} - HTTP 500{% endblock %}
+{% block content %}
+    <div class="jumbotron">
+        <h1 style="color: red;">500 Internal Server Error <i class="fa fa-exclamation-circle fa-lg"></i></h1>
+        <p class="lead">Uh-oh you found a bug! Typically, a mail would now be sent to a admin.</p>
+        <p>URL: {{ request.url }}</p>
+    </div>
+{% endblock %}

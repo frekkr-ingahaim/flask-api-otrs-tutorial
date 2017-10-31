@@ -1,0 +1,29 @@
+# Lines starting with '#' are considered comments.
+*.pyc
+*.py~
+*.wsgi~
+*.db
+build
+dist
+media
+*egg*
+*.exe
+*.log
+dist_wininst
+*.in~
+*logs*
+/logs/
+*.rst~
+*~
+*debug.conf.py
+*dev.py
+tmp
+*/main/migrations/*
+*_local*
+*.pid
+venv
+instance/config.py
+
+# Do add the empty log and static dirs
+!.instance
+!.logs

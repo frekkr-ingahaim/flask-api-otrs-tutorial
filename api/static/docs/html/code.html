@@ -1,0 +1,535 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Flask REST API for OTRS Tutorial documentation &#8212; Flask REST API for OTRS tutorial 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to Flask API for OTRS tutorial’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="flask-rest-api-for-otrs-tutorial-documentation">
+<h1>Flask REST API for OTRS Tutorial documentation<a class="headerlink" href="#flask-rest-api-for-otrs-tutorial-documentation" title="Permalink to this headline">¶</a></h1>
+<p>The code is fairly well documented so do have a look at the code.
+Sphinx is used in combination with the extension autodoc to complete
+this documentation.</p>
+<div class="section" id="purpose">
+<h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
+<p>The code is meant to show you how to create a REST API with flask.
+I chose to build an interface to OTRS and this project could serve as a
+start to create a REST API to access OTRS. Yes, OTRS does have it’s own
+webservices but this is meant as a tutorial.</p>
+<p>Since this is a Flask REST API tutorial, please view it as such and not
+as a production type of code. Following improvements are possible:</p>
+<ul class="simple">
+<li>Use SQLAlchemy so you can switch to another database for production and
+maybe use SQLite just for testing</li>
+<li>Serve documentation with Nginx/Apache instead of via a Blueprint</li>
+<li>Add more tests to the code</li>
+<li>Measure code coverage with test coverage metrics</li>
+<li>Expand the API with more methods besides a few get API functions.
+A full REST API could include get, post, put and delete functionality</li>
+<li>Provide some means of credential checking (login)</li>
+<li>Change the project layout depending on the scale of your project</li>
+<li>Check your code for style consistency or style guides provided by your
+employer</li>
+</ul>
+<p>This code is meant as a starting point to show how you could develop
+a REST API in Flask/Python. The code as it is, is not meant for
+production.</p>
+<p>The client</p>
+<img alt="Client" class="indoc-img align-center" src="_images/client.png" />
+<p>The back-end site</p>
+<img alt="Client" class="indoc-img align-center" src="_images/backend_site.png" />
+</div>
+<div class="section" id="project-layout">
+<h2>Project layout<a class="headerlink" href="#project-layout" title="Permalink to this headline">¶</a></h2>
+<p>There a lot of possibilities on how to organize your code, this is just
+one of them and not the focus of this tutorial.
+This project uses the following layout:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>├── api
+│   ├── static
+│   │   ├── css
+│   │   │   ├── flask_api_client.css
+│   │   │   └── flask_api_main.css
+│   │   ├── docs
+│   │   │   └── html
+│   │   │       ├── code.html
+│   │   │       └── index.html
+│   │   ├── img
+│   │   │   ├── favicon.ico
+│   │   │   └── logo.png
+│   │   └── js
+│   ├── templates
+│   │   ├── 400.html
+│   │   ├── 403.html
+│   │   ├── 404.html
+│   │   ├── 500.html
+│   │   ├── base.html
+│   │   └── index.html
+│   ├── views
+│   │   ├── customers
+│   │   │   └── index.py
+│   │   └── home
+│   │       └── index.py
+│   └── blueprints.py
+├── client
+│   └── index.html
+├── config
+│   └── default.py
+├── data
+│   ├── sqlite_partial_otrs_db.sql
+│   └── temp.db
+├── docs
+│   ├── build
+│   │   └── html
+│   │       ├── code.html
+│   │       └── index.html
+│   ├── source
+│   │   ├── code.rst
+│   │   ├── conf.py
+│   │   └── index.rst
+│   └── Makefile
+├── instance
+│   └── config.py
+├── logs
+│   └── flask_api_otrs.log
+├── tests
+│   └── test_api.py
+├── manage.py
+├── README
+├── LICENSE
+└── requirements.txt
+</pre></div>
+</div>
+</div>
+<div class="section" id="start-the-application">
+<h2>Start the application<a class="headerlink" href="#start-the-application" title="Permalink to this headline">¶</a></h2>
+<p>After you have cloned the code via git, you’ll need to set-up a virtualenv
+using Python 3. Create a directory and set-up the virtualenv:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ git clone &lt;repository url&gt;
+$ cd flask-api-otrs-tutorial
+$ mkdir venv
+$ python3 -m &quot;venv&quot; venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt
+</pre></div>
+</div>
+<p>Create a local config.py file if you have your own local settings:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ touch instance/config.py
+</pre></div>
+</div>
+<p>An example of what you could put in the config.py. Mind that if you
+would put your PostgreSQL database info here, you will need to change
+the code to connect to the PostgreSQL database instead of SQLite:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Instance (local) settings. This file should not be under code</span>
+<span class="sd">revision if you put your local settings in it.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">&quot;&quot;&quot;Default PostgreSQL database settings. If changing the example to</span>
+<span class="sd">connect to your OTRS PostgreSQL database, you could put your settings</span>
+<span class="sd">here.&quot;&quot;&quot;</span>
+<span class="c1">#DATABASE_HOST =  &quot;&quot;</span>
+<span class="c1">#DATABASE_NAME = &quot;&quot;</span>
+<span class="c1">#DATABASE_USER = &quot;&quot;</span>
+<span class="c1">#DATABASE_PASSWORD = &quot;&quot;</span>
+<span class="c1">#DATABASE_PORT = 5432</span>
+
+<span class="sd">&quot;&quot;&quot;Flask settings.&quot;&quot;&quot;</span>
+<span class="c1">#SECRET_KEY = &quot;&quot;</span>
+</pre></div>
+</div>
+<p>You start the application via the manage.py script:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ python manage.py
+</pre></div>
+</div>
+<p>Flask will run on <a class="reference external" href="http://localhost:5000">http://localhost:5000</a>.</p>
+<p>You can visit this website (back-end) to learn more and see some basic calls.
+There is also a client in client/index.html that will allow you to search
+the customers in the SQLite database. After you’ve typed at least 3
+characters, the input is used to filter the list of customers.
+This info is sent to the  back-end via <strong>Ajax</strong>.</p>
+<p>The manage.py file is meant to start the application. If you want to
+add your own additional commands, this is where you would put them.
+Check out Flask-Script, Flask-Runner or the Flask command line
+interface (CLI), new in Flask version 0.11.</p>
+<span class="target" id="module-manage"></span><p><strong>Module summary</strong>: Very basic management script for the Flask API
+OTRS Tutorial. In a real app, you would register commands to further
+automate your work. Check out the Flask-Script, Flask-Runner or the
+Flask command line interface (CLI) new in version 0.11.</p>
+<dl class="function">
+<dt id="manage.list_routes">
+<code class="descclassname">manage.</code><code class="descname">list_routes</code><span class="sig-paren">(</span><em>app</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/manage.html#list_routes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#manage.list_routes" title="Permalink to this definition">¶</a></dt>
+<dd><p>List the registered routes for the app</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>app (Flask): Flask object</dd>
+<dt>Returns:</dt>
+<dd>output (list): List of registered urls</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="manage.setup_logging">
+<code class="descclassname">manage.</code><code class="descname">setup_logging</code><span class="sig-paren">(</span><em>log_basedir='logs'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/manage.html#setup_logging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#manage.setup_logging" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup logging. We will log al info into a rotating file log.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>log_basedir (str): base/parent directory for the logfiles</dd>
+</dl>
+</dd></dl>
+
+<dl class="data">
+<dt id="manage.toolbar">
+<code class="descclassname">manage.</code><code class="descname">toolbar</code><em class="property"> = &lt;flask_debugtoolbar.DebugToolbarExtension object&gt;</em><a class="headerlink" href="#manage.toolbar" title="Permalink to this definition">¶</a></dt>
+<dd><p>By default, the main function is going to get loaded twice.
+This is due to the Werkzeug reloader. It spawns a child process so it
+can restart the process each time a code changes is detected. This is
+actually very handy while developing.
+If you want to change this behaviour, uncomment the following line.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="app-creation">
+<h2>App creation<a class="headerlink" href="#app-creation" title="Permalink to this headline">¶</a></h2>
+<p>The Flask application object is created by a factory function.
+This is done with the create_app function.</p>
+<span class="target" id="module-api"></span><dl class="function">
+<dt id="api.create_app">
+<code class="descclassname">api.</code><code class="descname">create_app</code><span class="sig-paren">(</span><em>config_name='default'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api.html#create_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.create_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the flask app:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">load</span> <span class="n">the</span> <span class="n">default</span> <span class="n">config</span>
+<span class="o">-</span> <span class="n">load</span> <span class="n">a</span> <span class="n">local</span> <span class="n">config</span> <span class="k">if</span> <span class="n">present</span>
+<span class="o">-</span> <span class="n">register</span> <span class="n">the</span> <span class="n">blueprints</span>
+<span class="o">-</span> <span class="n">setup</span> <span class="n">the</span> <span class="n">logger</span>
+<span class="o">-</span> <span class="n">log</span> <span class="n">the</span> <span class="n">routes</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>config_name (str): configuration to load</dd>
+<dt>Returns:</dt>
+<dd>The Flask object</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="blueprints">
+<h2>Blueprints<a class="headerlink" href="#blueprints" title="Permalink to this headline">¶</a></h2>
+<p>You can find more info on Blueprints in the official Flask documentation.
+Blueprints are a convenient way to bundle and manage the routes and
+views meant to handle them.</p>
+<span class="target" id="module-api.blueprints"></span><p>Create the Blueprints for the api routes.
+We use a factory function to create the Blueprints and add those to
+a global variable all_blueprints</p>
+<dl class="function">
+<dt id="api.blueprints._factory">
+<code class="descclassname">api.blueprints.</code><code class="descname">_factory</code><span class="sig-paren">(</span><em>partial_module_string</em>, <em>url_prefix</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api/blueprints.html#_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.blueprints._factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates blueprint objects for view modules.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd><p class="first">partial_module_string (str): string representing a view module
+without the absolute path.</p>
+<p class="last">url_prefix (str): URL prefix passed to the blueprint.</p>
+</dd>
+<dt>Returns:</dt>
+<dd>Blueprint. Blueprint instance for a view module.</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="api-functions">
+<h2>API functions<a class="headerlink" href="#api-functions" title="Permalink to this headline">¶</a></h2>
+<p>Our very small API only exposes 2 API urls /customers/ and /customers/info.
+These urls route to the following functions:</p>
+<ul class="simple">
+<li>get_customers is used to lookup a list of customer names in the
+database in order to facilitate the autocomplete feature of the
+search field.</li>
+<li>get_customer_info then retrieves the customer info based on a
+company name</li>
+</ul>
+<span class="target" id="module-api.views.home.index"></span><dl class="function">
+<dt id="api.views.home.index.index">
+<code class="descclassname">api.views.home.index.</code><code class="descname">index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api/views/home/index.html#index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.views.home.index.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Back-end index page. Use the search submenu to see an example of
+the JSON data returned.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>The rendered index page</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-api.views.customers.index"></span><dl class="function">
+<dt id="api.views.customers.index.get_customers">
+<code class="descclassname">api.views.customers.index.</code><code class="descname">get_customers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api/views/customers/index.html#get_customers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.views.customers.index.get_customers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to return a list of customers filtered on the search parameter
+Gets the search value from the request. You can manually add the search
+part by including ‘?search=&lt;searchterm&gt;’ after the /customers/ link.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Returns a ‘Response’ object containing the list of customers.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.views.customers.index.get_customer_info">
+<code class="descclassname">api.views.customers.index.</code><code class="descname">get_customer_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/api/views/customers/index.html#get_customer_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.views.customers.index.get_customer_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the info of a customer. Expects a complete customer name
+Gets the search value from the request. You can manually add the search
+part by including ‘?search=&lt;searchterm&gt;’ after the /customers/info/ link.</p>
+<dl class="docutils">
+<dt>Returns:</dt>
+<dd>Returns a ‘Response’ object containing a dictionary with the company information</dd>
+</dl>
+</dd></dl>
+
+<p>Following helper functions are used to execute the sql’s.</p>
+<span class="target" id="module-api.views.customers.index"></span><dl class="function">
+<dt id="api.views.customers.index._execute_sql">
+<code class="descclassname">api.views.customers.index.</code><code class="descname">_execute_sql</code><span class="sig-paren">(</span><em>sql</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api/views/customers/index.html#_execute_sql"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.views.customers.index._execute_sql" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function to execute the SQL commands. We use SQLite but
+the code is easily changed to connect to another database such as
+PostgreSQL. If you want to use a Postgres database, you need to set
+the following vars in instance/config or change them in class
+Config. They need to be loaded on the program start:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DATABASE_NAME</span> <span class="o">-</span> <span class="n">dbname</span><span class="p">:</span> <span class="n">the</span> <span class="n">database</span> <span class="n">name</span> <span class="p">(</span><span class="n">database</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">deprecated</span> <span class="n">alias</span><span class="p">)</span>
+<span class="n">DATABASE_USER</span> <span class="o">-</span> <span class="n">user</span><span class="p">:</span> <span class="n">user</span> <span class="n">name</span> <span class="n">used</span> <span class="n">to</span> <span class="n">authenticate</span>
+<span class="n">DATABASE_PASSWORD</span> <span class="o">-</span> <span class="n">password</span><span class="p">:</span> <span class="n">password</span> <span class="n">used</span> <span class="n">to</span> <span class="n">authenticate</span>
+<span class="n">DATABASE_HOST</span> <span class="o">-</span> <span class="n">host</span><span class="p">:</span> <span class="n">database</span> <span class="n">host</span> <span class="n">address</span> <span class="p">(</span><span class="n">defaults</span> <span class="n">to</span> <span class="n">UNIX</span> <span class="n">socket</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">provided</span><span class="p">)</span>
+<span class="n">DATABASE_PORT</span> <span class="o">-</span> <span class="n">port</span><span class="p">:</span> <span class="n">connection</span> <span class="n">port</span> <span class="n">number</span> <span class="p">(</span><span class="n">defaults</span> <span class="n">to</span> <span class="mi">5432</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">provided</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>An exception can occur When the connection to the database fails or
+executing the SQL produces an error.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.views.customers.index._get_customers">
+<code class="descclassname">api.views.customers.index.</code><code class="descname">_get_customers</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api/views/customers/index.html#_get_customers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.views.customers.index._get_customers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the database for customers who’s name contains ‘name’.</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>name (str): Name or part of the name to filter the customers</dd>
+<dt>Returns:</dt>
+<dd>Return a tuple of customers filtered on the name (part)</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="api.views.customers.index._get_customer_info">
+<code class="descclassname">api.views.customers.index.</code><code class="descname">_get_customer_info</code><span class="sig-paren">(</span><em>customer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/api/views/customers/index.html#_get_customer_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#api.views.customers.index._get_customer_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the customer info</p>
+<dl class="docutils">
+<dt>Args:</dt>
+<dd>customer (str): Name of the customer</dd>
+<dt>Returns:</dt>
+<dd>Return a list of customers filtered on the customer name</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
+<p>Only a couple of example tests are provided to test basic testing.
+To be more complete when you design and develop an API, you could/should
+use coverage tests too. Testing the GUI is another possible suite of
+tests.</p>
+<dl class="class">
+<dt id="tests.test_api.APITestCase">
+<em class="property">class </em><code class="descclassname">tests.test_api.</code><code class="descname">APITestCase</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tests/test_api.html#APITestCase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_api.APITestCase" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="tests.test_api.APITestCase.test_404">
+<code class="descname">test_404</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tests/test_api.html#APITestCase.test_404"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_api.APITestCase.test_404" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if we get a 404 on a non existing page.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tests.test_api.APITestCase.test_get_custumer_info">
+<code class="descname">test_get_custumer_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tests/test_api.html#APITestCase.test_get_custumer_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_api.APITestCase.test_get_custumer_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>We would need a dummy db with some test values to test this.
+Since this code is only meant as a short example, we will not
+include a sqlite database with test data. You could change this
+method to connect to your own test database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tests.test_api.APITestCase.test_home">
+<code class="descname">test_home</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tests/test_api.html#APITestCase.test_home"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_api.APITestCase.test_home" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if we can reach the index page.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tests.test_api.APITestCase.test_search_customer">
+<code class="descname">test_search_customer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tests/test_api.html#APITestCase.test_search_customer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_api.APITestCase.test_search_customer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if the API can search for customers based on a partial
+name (GET request).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tests.test_api.APITestCase.test_search_customer_wrong_method">
+<code class="descname">test_search_customer_wrong_method</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tests/test_api.html#APITestCase.test_search_customer_wrong_method"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.test_api.APITestCase.test_search_customer_wrong_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test search for a customer with post instead of get.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<p>Documentation is done via Sphinx and the rst format.
+The documents are prebuilt for your convenience, something that might
+not be done in a production setting since you can just generate the docs
+your self.</p>
+<p>To automatically document the code, the Sphinx autodoc extension is used.
+The source of the document is /docs/source/code.rst.
+We try to use the Google style comments as much as possible.</p>
+<p>To build the documentation, from the command line:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ source venv/bin/activate
+$ make html
+</pre></div>
+</div>
+<p>The output files are placed in /docs/build/html. Open the index.html
+or the code.html files in a browser.</p>
+<p>As said before, for convenience the docs are available from the menu in
+the back-end application. In a production setting, you would use your
+webserver to set up a location to serve the docs and not have this
+served up by the Flask app.</p>
+</div>
+<div class="section" id="database">
+<h2>Database<a class="headerlink" href="#database" title="Permalink to this headline">¶</a></h2>
+<p>For simplicity, the database used is SQLite. In a production environment
+this could be PostgreSQL or another DB.
+If you want change this, you should use SQLAlchemy or for instance,
+in my case this would be PostgreSQL.</p>
+</div>
+<div class="section" id="use-a-production-database">
+<h2>Use a production database<a class="headerlink" href="#use-a-production-database" title="Permalink to this headline">¶</a></h2>
+<p>For instance if you would have an OTRS instance using a PostgreSQL
+database, do the following.
+In api/views/customers/index.py:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">import psycopg2</p>
+</li>
+<li><p class="first">edit execute_sql(sql)</p>
+<blockquote>
+<div><ul>
+<li><p class="first">uncomment this block of code:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">CON_PARAM</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;dbname&#39;</span><span class="p">:</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;DATABASE_NAME&#39;</span><span class="p">],</span>
+<span class="s1">&#39;user&#39;</span><span class="p">:</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;DATABASE_USER&#39;</span><span class="p">],</span>
+<span class="s1">&#39;password&#39;</span><span class="p">:</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;DATABASE_PASSWORD&#39;</span><span class="p">],</span>
+<span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;DATABASE_HOST&#39;</span><span class="p">],</span>
+<span class="s1">&#39;port&#39;</span><span class="p">:</span> <span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;DATABASE_PORT&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">comment the sqlite3.connect line and uncomment the psycopg2 line:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">conn</span> <span class="o">=</span> <span class="n">psycopg2</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">**</span><span class="n">CON_PARAM</span><span class="p">)</span>
+<span class="c1">#conn = sqlite3.connect(current_app.config[&#39;DATABASE&#39;])</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">create a local file to put your settings in:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ vi instance/config.py
+</pre></div>
+</div>
+<p>These are possible settings:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">DATABASE_NAME</span> <span class="o">-</span> <span class="n">dbname</span><span class="p">:</span> <span class="n">the</span> <span class="n">database</span> <span class="n">name</span>
+<span class="n">DATABASE_USER</span> <span class="o">-</span> <span class="n">user</span><span class="p">:</span> <span class="n">user</span> <span class="n">name</span> <span class="n">used</span> <span class="n">to</span> <span class="n">authenticate</span>
+<span class="n">DATABASE_PASSWORD</span> <span class="o">-</span> <span class="n">password</span><span class="p">:</span> <span class="n">password</span> <span class="n">used</span> <span class="n">to</span> <span class="n">authenticate</span>
+<span class="n">DATABASE_HOST</span> <span class="o">-</span> <span class="n">host</span><span class="p">:</span> <span class="n">database</span> <span class="n">host</span> <span class="n">address</span>
+<span class="n">DATABASE_PORT</span> <span class="o">-</span> <span class="n">port</span><span class="p">:</span> <span class="n">connection</span> <span class="n">port</span> <span class="n">number</span>
+<span class="n">SECRET_KEY</span><span class="o">=</span> <span class="s1">&#39;&#39;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>Distributed under the MIT license, see LICENSE file for the full text.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to Flask API for OTRS tutorial’s documentation!</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, <a href="https://www.ictforce.be" target="_blank">ICT Force</a>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/code.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

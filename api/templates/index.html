@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block append_title %}Index{% endblock %}
+{% block content %}
+There are a couple of ways to try out the API:
+<ul>
+	<li>Use the index.html file in the client directory to access the API.</li>
+	<li>Go to the search menu above and click one of the search links to see what JSON data is returned.</li>
+	<li>On Linux, use curl from the command line for example:
+		<pre>
+		$> curl http://localhost:5000/customers/?search=Com
+		[
+		  "Company One", 
+		  "Company Two", 
+		  "Company Three", 
+		  "A Company One", 
+		  "A Company Two", 
+		  "B Company One", 
+		  "B Company Two"
+		]
+		</pre>
+	</li>
+</ul>
+{% endblock %}

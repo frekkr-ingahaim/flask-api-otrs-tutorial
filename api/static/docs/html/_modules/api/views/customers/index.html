@@ -1,0 +1,261 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>api.views.customers.index &#8212; Flask REST API for OTRS tutorial 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for api.views.customers.index</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">from</span> <span class="nn">api.blueprints</span> <span class="k">import</span> <span class="n">bp_customer</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">current_app</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+
+<span class="sd">&quot;&quot;&quot;If using a Postgres database, uncomment the following line and</span>
+<span class="sd">comment the sqlite3 line.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># import psycopg2</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+
+<span class="n">customer_fields</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;customer_id&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;street&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;zip&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;city&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;country&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;url&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;comments&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;valid_id&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;create_time&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;create_by&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;change_time&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;change_by&quot;</span> <span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;This list of fields is a match for the table columns of the</span>
+<span class="sd">customer_company table in OTRS. For this tutorial, the tables was</span>
+<span class="sd">creatin in SQLite.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="get_customers"><a class="viewcode-back" href="../../../../code.html#api.views.customers.index.get_customers">[docs]</a><span class="nd">@bp_customer</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_customers</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Used to return a list of customers filtered on the search parameter</span>
+<span class="sd">    Gets the search value from the request. You can manually add the search</span>
+<span class="sd">    part by including &#39;?search=&lt;searchterm&gt;&#39; after the /customers/ link.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Returns a &#39;Response&#39; object containing the list of customers.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">search</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;search&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Searching &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">search</span><span class="p">))</span>
+    <span class="n">customer</span> <span class="o">=</span> <span class="n">_get_customers</span><span class="p">(</span><span class="n">search</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">customer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">customer</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">cust</span> <span class="o">=</span> <span class="p">[</span> <span class="n">cust_t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">cust_t</span> <span class="ow">in</span> <span class="n">customer</span><span class="p">]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">cust</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cust</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">cust</span><span class="p">)</span>
+    <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;Access-Control-Allow-Origin&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">resp</span></div>
+
+<div class="viewcode-block" id="get_customer_info"><a class="viewcode-back" href="../../../../code.html#api.views.customers.index.get_customer_info">[docs]</a><span class="nd">@bp_customer</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/info&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_customer_info</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get the info of a customer. Expects a complete customer name</span>
+<span class="sd">    Gets the search value from the request. You can manually add the search</span>
+<span class="sd">    part by including &#39;?search=&lt;searchterm&gt;&#39; after the /customers/info/ link.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Returns a &#39;Response&#39; object containing a dictionary with the company information</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">customer</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;search&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Searching &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">customer</span><span class="p">))</span>
+    <span class="n">cust_info</span> <span class="o">=</span> <span class="n">_get_customer_info</span><span class="p">(</span><span class="n">customer</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">cust_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">cust_info</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Customer data found&quot;</span><span class="p">)</span>
+        <span class="n">cust_d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">customer_fields</span><span class="p">,</span> <span class="o">*</span><span class="n">cust_info</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;No customer data found or more than one possible client.&quot;</span><span class="p">)</span>
+        <span class="n">cust_d</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">cust_d</span><span class="p">)</span>
+    <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;Access-Control-Allow-Origin&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">resp</span></div>
+
+
+<div class="viewcode-block" id="_execute_sql"><a class="viewcode-back" href="../../../../code.html#api.views.customers.index._execute_sql">[docs]</a><span class="k">def</span> <span class="nf">_execute_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to execute the SQL commands. We use SQLite but</span>
+<span class="sd">    the code is easily changed to connect to another database such as</span>
+<span class="sd">    PostgreSQL. If you want to use a Postgres database, you need to set</span>
+<span class="sd">    the following vars in instance/config or change them in class</span>
+<span class="sd">    Config. They need to be loaded on the program start::</span>
+
+<span class="sd">        DATABASE_NAME - dbname: the database name (database is a deprecated alias)</span>
+<span class="sd">        DATABASE_USER - user: user name used to authenticate</span>
+<span class="sd">        DATABASE_PASSWORD - password: password used to authenticate</span>
+<span class="sd">        DATABASE_HOST - host: database host address (defaults to UNIX socket if not provided)</span>
+<span class="sd">        DATABASE_PORT - port: connection port number (defaults to 5432 if not provided)</span>
+
+<span class="sd">    An exception can occur When the connection to the database fails or</span>
+<span class="sd">    executing the SQL produces an error.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        # Uncomment this block of code if you want to use PostgreSQL and have set the correct</span>
+<span class="sd">        # settings in instance/config.py. The settings are used to create the CON_PARAM dictionary</span>
+<span class="sd">        # for the connect function.</span>
+<span class="sd">        # For testing reason, these settings are also logged to console &amp; file, so if using this in a</span>
+<span class="sd">        # production environment, please do not use the 2 logging lines to prevent writing these in cleartext</span>
+<span class="sd">        CON_PARAM = { &#39;dbname&#39;: current_app.config[&#39;DATABASE_NAME&#39;],</span>
+<span class="sd">                      &#39;user&#39;: current_app.config[&#39;DATABASE_USER&#39;],</span>
+<span class="sd">                      &#39;password&#39;: current_app.config[&#39;DATABASE_PASSWORD&#39;],</span>
+<span class="sd">                      &#39;host&#39;: current_app.config[&#39;DATABASE_HOST&#39;],</span>
+<span class="sd">                      &#39;port&#39;: current_app.config[&#39;DATABASE_PORT&#39;]</span>
+<span class="sd">        }</span>
+<span class="sd">        # Only uncomment these lines if you&#39;re not trying to connect to a production database!</span>
+<span class="sd">        # log.debug(&quot;DEBUG = {}&quot;.format(current_app.config[&#39;DEBUG&#39;]))</span>
+<span class="sd">        # log.debug(&quot;CON_PARAM {}&quot;.format(CON_PARAM))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="sd">&quot;&quot;&quot;Connect to the test database. If using a Postgres database,</span>
+<span class="sd">        uncomment the following line.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># conn = psycopg2.connect(**CON_PARAM)</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">current_app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;DATABASE&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Open a cursor to perform database operations</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+        <span class="c1"># Run sql</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">res</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;execute_sql(): error while connecting to the database or executing the sql&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># Close communication with the database</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="_get_customers"><a class="viewcode-back" href="../../../../code.html#api.views.customers.index._get_customers">[docs]</a><span class="k">def</span> <span class="nf">_get_customers</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Search the database for customers who&#39;s name contains &#39;name&#39;.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name (str): Name or part of the name to filter the customers</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Return a tuple of customers filtered on the name (part)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sql</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;select customer_id</span>
+<span class="s2">    from customer_company</span>
+<span class="s2">    where LOWER(customer_id) like LOWER(&#39;%</span><span class="si">{}</span><span class="s2">%&#39;)&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_execute_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="_get_customer_info"><a class="viewcode-back" href="../../../../code.html#api.views.customers.index._get_customer_info">[docs]</a><span class="k">def</span> <span class="nf">_get_customer_info</span><span class="p">(</span><span class="n">customer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieve the customer info</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        customer (str): Name of the customer</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Return a list of customers filtered on the customer name</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">sql</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;select *</span>
+<span class="s2">    from customer_company</span>
+<span class="s2">    where LOWER(customer_id) like LOWER(&#39;%</span><span class="si">{}</span><span class="s2">%&#39;)&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">customer</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_execute_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../api.html">api</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, <a href="https://www.ictforce.be" target="_blank">ICT Force</a>.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

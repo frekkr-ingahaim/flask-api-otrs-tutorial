@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block append_title %} - HTTP 404{% endblock %}
+{% block content %}
+    <div class="jumbotron">
+        <h1 style="color: orange;">404 Not Found <i class="fa fa-question-circle fa-lg"></i></h1>
+        <p class="lead">Page not found. Boohoo</p>
+        <p>URL: {{ request.url }}</p>
+    </div>
+{% endblock %}
